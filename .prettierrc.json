@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/prettierrc.json",
+  "arrowParens": "always",
+  "printWidth": 100,
+  "endOfLine": "lf",
+  "semi": false,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "plugins": ["@prettier/plugin-oxc"],
+  "overrides": [
+    {
+      "files": ["**/*.user.js", "scripts/**/*.js"],
+      "options": { "parser": "babel" }
+    },
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "options": { "parser": "oxc-ts" }
+    }
+  ]
+}
