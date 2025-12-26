@@ -6,12 +6,17 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "pnpm run typecheck && pnpm run format:check",
+    "dev": "tsdown --watch",
+    "build": "tsdown",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "@prettier/plugin-oxc": "^0.0.4",
+    "@types/node": "^25.0.3",
+    "@types/tampermonkey": "^5.0.5",
     "eslint-config-prettier": "^10.1.8",
+    "estree-walker": "^3.0.3",
     "prettier": "^3.7.4",
+    "tsdown": "^0.18.3",
     "typescript": "^5.9.3"
   }
 }
