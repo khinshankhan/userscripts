@@ -1,0 +1,68 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+  # allows you to run this workflow manually from the actions tab
+  workflow_dispatch: {}
+concurrency:
+  group: publish-dist
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install deps
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      - name: Publish dist branch
+        run: |
+          set -euo pipefail
+
+          # ensure dist output exists
+          test -d dist
+
+          # configure committer identity
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # create a clean orphan branch for dist output
+          git switch --orphan dist
+          git rm -rf . >/dev/null 2>&1 || true
+
+          # copy build artifacts to repo root (flatten dist/)
+          cp -R dist/. .
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to publish."
+            exit 0
+          fi
+
+          git commit -m "chore(dist): publish from $GITHUB_SHA"
+
+          git push origin dist --force
