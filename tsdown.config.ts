@@ -1,4 +1,4 @@
-import { defineConfig } from "tsdown"
+import { defineConfig, Rolldown } from "tsdown"
 import { walk } from "estree-walker"
 import { runInNewContext } from "node:vm"
 import type { UserscriptBanner } from "./types/banner"
@@ -37,7 +37,7 @@ function bannerObjectToString(opts: UserscriptBanner): string {
   ].join("\n")
 }
 
-function userscriptsBannerExtractorPlugin() {
+function userscriptsBannerExtractorPlugin(): Rolldown.Plugin {
   return {
     name: "userscripts-banner-extractor",
     generateBundle(_options: any, bundle: any) {
