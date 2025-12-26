@@ -52,9 +52,11 @@ jobs:
           # create a clean orphan branch for dist output
           git switch --orphan dist
           git rm -rf . >/dev/null 2>&1 || true
+          rm -rf node_modules
 
           # copy build artifacts to repo root (flatten dist/)
           cp -R dist/. .
+          rm -rf dist
 
           git add -A
           if git diff --cached --quiet; then
