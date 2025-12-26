@@ -1,6 +1,8 @@
-import { defineConfig, Rolldown } from "tsdown"
-import { walk } from "estree-walker"
+import fs from "node:fs"
+import path from "node:path"
 import { runInNewContext } from "node:vm"
+import { defineConfig, Rolldown, type UserConfig } from "tsdown"
+import { walk } from "estree-walker"
 import type { UserscriptBanner } from "./types/banner"
 
 function evalDefineUserScript(callExpressionCode: string): ReturnType<typeof defineUserScript> {
@@ -73,19 +75,39 @@ function userscriptsBannerExtractorPlugin(): Rolldown.Plugin {
   }
 }
 
-export default defineConfig([
-  {
-    entry: "./scripts/hello/src/index.ts",
-    platform: "browser",
-    format: "iife",
-    inputOptions: {
-      experimental: {
-        attachDebugInfo: "none",
+function getScripts(dir: string): Array<{ id: string; entry: string }> {
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .map((d) => {
+      // support for flat files, just in case
+      if (!d.isDirectory()) {
+        const id = d.name.replace(/\..*$/, "")
+        const entry = path.join(dir, d.name)
+        return { id, entry }
+      }
+
+      const id = d.name
+      const entry = path.join(dir, id, "src", "index.ts")
+      return { id, entry }
+    })
+    .filter(({ entry }) => fs.existsSync(entry))
+}
+
+export default defineConfig(
+  getScripts("./scripts").map(({ id, entry }): UserConfig => {
+    return {
+      entry,
+      platform: "browser",
+      format: "iife",
+      inputOptions: {
+        experimental: {
+          attachDebugInfo: "none",
+        },
       },
-    },
-    outputOptions: {
-      entryFileNames: "hello.user.js",
-    },
-    plugins: [userscriptsBannerExtractorPlugin()],
-  },
-])
+      outputOptions: {
+        entryFileNames: `${id}.user.js`,
+      },
+      plugins: [userscriptsBannerExtractorPlugin()],
+    }
+  })
+)
