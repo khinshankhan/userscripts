@@ -3,7 +3,10 @@ export type UserscriptBanner = {
   description?: string
   namespace: string
   version: string
+
   author: string
+  homepageURL: string
+  supportURL: string
 
   match?: string[]
   include?: string[]
@@ -14,5 +17,5 @@ export type UserscriptBanner = {
 }
 
 declare global {
-  function defineUserScript<const T extends UserscriptBanner>(banner: T): T
+  function defineUserScript(banner: UserscriptBanner): UserscriptBanner
 }
