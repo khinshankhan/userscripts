@@ -15,7 +15,11 @@ defineUserScript({
   grant: ["none"],
 })
 
-const checkbox = document.getElementById("accept_ssa") as HTMLInputElement | null
-if (checkbox && !checkbox.checked) {
+function isInput(el: Element | null): el is HTMLInputElement {
+  return el instanceof HTMLInputElement
+}
+
+const checkbox = document.getElementById("accept_ssa")
+if (isInput(checkbox) && !checkbox.checked) {
   checkbox.click()
 }
