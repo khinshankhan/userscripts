@@ -1,3 +1,5 @@
+import { ensureSsaAccepted } from "./ensure-ssa-accepted"
+
 defineUserScript({
   name: "Steam Register Key Auto Accept SSA",
   description:
@@ -15,11 +17,4 @@ defineUserScript({
   grant: ["none"],
 })
 
-function isInput(el: Element | null): el is HTMLInputElement {
-  return el instanceof HTMLInputElement
-}
-
-const checkbox = document.getElementById("accept_ssa")
-if (isInput(checkbox) && !checkbox.checked) {
-  checkbox.click()
-}
+ensureSsaAccepted(document)
