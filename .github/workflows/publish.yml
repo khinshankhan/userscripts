@@ -59,6 +59,7 @@ jobs:
           git switch --orphan dist
           git rm -rf . >/dev/null 2>&1 || true
           rm -rf node_modules
+          rm .tsbuildinfo
 
           # copy build artifacts to repo root (flatten dist/)
           cp -R dist/. .
