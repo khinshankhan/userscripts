@@ -10,7 +10,8 @@
     "dev": "tsdown --watch",
     "build": "tsdown",
     "new": "node ./new.ts",
-    "test": "vitest"
+    "test:watch": "vitest",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^25.0.3",
