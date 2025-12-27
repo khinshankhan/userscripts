@@ -2,7 +2,7 @@ defineUserScript({
   name: "Steam Register Key Auto Accept SSA",
   description:
     "Automatically checks the steam subscriber agreement box on Steam register key pages.",
-  namespace: "https://github.com/khinshankhan/userscripts",
+  namespace: "https://khinshankhan.com",
   version: "0.1.0",
 
   author: "khinshankhan",
