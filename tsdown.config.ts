@@ -128,7 +128,13 @@ function getScripts(dir: string): Array<{ id: string; entry: string }> {
 }
 
 // TODO: figure out a better way to manage external globals and their URLs for userscripts
-const externalGlobalsTable: Record<string, { lib: string } & { url: string }> = {}
+const externalGlobalsTable: Record<string, { lib: string; format: "esm" | "umd"; url: string }> = {
+  zod: {
+    lib: "Zod",
+    format: "esm",
+    url: "https://esm.sh/zod@4.2.1",
+  },
+}
 
 const importsTables = Object.entries(externalGlobalsTable).map((kv) => {
   return [kv[0], kv[1].lib + ` /* ${["__USERSCRIPT_IMPORT", kv[0]].join(":")} */`] as const
@@ -173,7 +179,7 @@ export default defineConfig(
         saveNodeModulesRegion(),
         userscriptsBannerExtractorPlugin(),
         {
-          name: "add-node-modules-userscript-requires",
+          name: "add-node-modules-userscript-cdn-requires",
           generateBundle(_options: any, bundle: any) {
             const first = Object.values(bundle)[0] as any
             if (!first || first.type !== "chunk") return
@@ -184,15 +190,57 @@ export default defineConfig(
             let header = code.slice(0, headerEnd)
             const pad = /\/\/ @([a-zA-Z]+ +)/.exec(header)![1]!.length
 
-            header += Array.from(requires).map((req) => {
-              const importEntry = externalGlobalsTable[req]
-              if (!importEntry) {
-                throw new Error(`Cannot find externalGlobalsTable entry for ${req}`)
-              }
+            header += Array.from(requires)
+              .map((req) => {
+                const importEntry = externalGlobalsTable[req]
+                if (!importEntry) {
+                  throw new Error(`Cannot find externalGlobalsTable entry for ${req}`)
+                }
 
-              return `// ${"@require".padEnd(pad)} ${importEntry.url}`
-            })
+                // TODO: are other formats needed?
+                if (importEntry.format !== "umd") {
+                  return null
+                }
+
+                return `// ${"@require".padEnd(pad)} ${importEntry.url}`
+              })
+              .filter((line) => line !== null)
             code = header.trimEnd() + "\n" + code.slice(headerEnd)
+            first.code = code
+          },
+        },
+        {
+          name: "add-node-modules-userscript-dynamic-requires",
+          generateBundle(_options: any, bundle: any) {
+            const first = Object.values(bundle)[0] as any
+            if (!first || first.type !== "chunk") return
+
+            let code: string = first.code
+
+            const iffeStartKey = 'use strict";\n'
+            const iffeFirstLineEnd = code.indexOf(iffeStartKey) + iffeStartKey.length
+            const beforeIffeStart = code.slice(0, iffeFirstLineEnd)
+            const afterIffeStart = code.slice(iffeFirstLineEnd)
+
+            const dynamicRequires = Array.from(requires)
+              .map((req) => {
+                const importEntry = externalGlobalsTable[req]
+                if (!importEntry) {
+                  throw new Error(`Cannot find externalGlobalsTable entry for ${req}`)
+                }
+
+                // TODO: are other formats needed?
+                if (importEntry.format !== "esm") {
+                  return null
+                }
+
+                return `\tconst ${importEntry.lib} = await import('${importEntry.url}');`
+              })
+              .filter((line) => line !== null)
+              .join("\n")
+
+            code = beforeIffeStart + dynamicRequires + "\n" + afterIffeStart
+            code = code.replace("(function() {", "(async function() {")
             first.code = code
           },
         },
