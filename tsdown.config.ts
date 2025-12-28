@@ -127,8 +127,19 @@ function getScripts(dir: string): Array<{ id: string; entry: string }> {
     .filter(({ entry }) => fs.existsSync(entry))
 }
 
+const GLOBAL_IMPORT_FORMATS = ["esm", "umd"] as const
+type GlobalImportFormat = (typeof GLOBAL_IMPORT_FORMATS)[number]
+
+const globalImportFormatGroups = {
+  cdn: ["umd"],
+  dynamic: ["esm"],
+} as const satisfies Record<string, readonly GlobalImportFormat[]>
+
 // TODO: figure out a better way to manage external globals and their URLs for userscripts
-const externalGlobalsTable: Record<string, { lib: string; format: "esm" | "umd"; url: string }> = {
+const externalGlobalsTable: Record<
+  string,
+  { lib: string; format: GlobalImportFormat; url: string }
+> = {
   zod: {
     lib: "Zod",
     format: "esm",
@@ -181,6 +192,11 @@ export default defineConfig(
         {
           name: "add-node-modules-userscript-cdn-requires",
           generateBundle(_options: any, bundle: any) {
+            const formats: readonly GlobalImportFormat[] = globalImportFormatGroups.cdn
+            if (formats.length === 0) {
+              return
+            }
+
             const first = Object.values(bundle)[0] as any
             if (!first || first.type !== "chunk") return
 
@@ -197,8 +213,7 @@ export default defineConfig(
                   throw new Error(`Cannot find externalGlobalsTable entry for ${req}`)
                 }
 
-                // TODO: are other formats needed?
-                if (importEntry.format !== "umd") {
+                if (!formats.includes(importEntry.format)) {
                   return null
                 }
 
@@ -212,6 +227,11 @@ export default defineConfig(
         {
           name: "add-node-modules-userscript-dynamic-requires",
           generateBundle(_options: any, bundle: any) {
+            const formats: readonly GlobalImportFormat[] = globalImportFormatGroups.dynamic
+            if (formats.length === 0) {
+              return
+            }
+
             const first = Object.values(bundle)[0] as any
             if (!first || first.type !== "chunk") return
 
@@ -229,8 +249,7 @@ export default defineConfig(
                   throw new Error(`Cannot find externalGlobalsTable entry for ${req}`)
                 }
 
-                // TODO: are other formats needed?
-                if (importEntry.format !== "esm") {
+                if (!formats.includes(importEntry.format)) {
                   return null
                 }
 
