@@ -75,6 +75,28 @@ function userscriptsBannerExtractorPlugin(): Rolldown.Plugin {
   }
 }
 
+// tsdown eliminates region comments, so we add them back here with a plugin that matches the filter
+// https://rolldown.rs/options/output#legalcomments
+function saveNodeModulesRegion(): Rolldown.Plugin {
+  const nodeModulesPath = process.cwd() + "/node_modules/"
+
+  return {
+    name: "save-node-modules-region",
+    transform(code, id) {
+      if (!id.includes(nodeModulesPath)) {
+        return code
+      }
+      return (
+        "//!#region node_modules/" +
+        id.slice(nodeModulesPath.length) +
+        "\n" +
+        code +
+        "\n//!#endregion"
+      )
+    },
+  }
+}
+
 function getScripts(dir: string): Array<{ id: string; entry: string }> {
   return fs
     .readdirSync(dir, { withFileTypes: true })
@@ -99,15 +121,18 @@ export default defineConfig(
       entry,
       platform: "browser",
       format: "iife",
+      noExternal: [],
       inputOptions: {
         experimental: {
           attachDebugInfo: "none",
         },
       },
+      minify: "dce-only",
       outputOptions: {
         entryFileNames: `${id}.user.js`,
+        legalComments: "inline",
       },
-      plugins: [userscriptsBannerExtractorPlugin()],
+      plugins: [saveNodeModulesRegion(), userscriptsBannerExtractorPlugin()],
     }
   })
 )
