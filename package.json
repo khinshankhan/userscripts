@@ -20,6 +20,7 @@
     "estree-walker": "^3.0.3",
     "jsdom": "^27.4.0",
     "prettier": "^3.7.4",
+    "rollup-plugin-external-globals": "^0.13.0",
     "tsdown": "^0.18.3",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"

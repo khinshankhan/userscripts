@@ -4,6 +4,7 @@ import { runInNewContext } from "node:vm"
 import { defineConfig, Rolldown, type UserConfig } from "tsdown"
 import { walk } from "estree-walker"
 import type { UserscriptBanner } from "./types/banner"
+import externalGlobals from "rollup-plugin-external-globals"
 
 function evalDefineUserScript(callExpressionCode: string): ReturnType<typeof defineUserScript> {
   // execute in a sandbox with defineUserScript stub
@@ -109,14 +110,33 @@ function getScripts(dir: string): Array<{ id: string; entry: string }> {
       }
 
       const id = d.name
-      const entry = path.join(dir, id, "src", "index.ts")
-      return { id, entry }
+      const possibleEntries = [
+        path.join(dir, id, "src", "index.ts"),
+        path.join(dir, id, "src", "index.tsx"),
+        path.join(dir, id, "src", "index.js"),
+        path.join(dir, id, "src", "index.jsx"),
+      ]
+      return possibleEntries.map((entry) => {
+        return {
+          id: d.name,
+          entry,
+        }
+      })
     })
+    .flat()
     .filter(({ entry }) => fs.existsSync(entry))
 }
 
+// TODO: figure out a better way to manage external globals and their URLs for userscripts
+const externalGlobalsTable: Record<string, { lib: string } & { url: string }> = {}
+
+const importsTables = Object.entries(externalGlobalsTable).map((kv) => {
+  return [kv[0], kv[1].lib + ` /* ${["__USERSCRIPT_IMPORT", kv[0]].join(":")} */`] as const
+})
+
 export default defineConfig(
   getScripts("./scripts").map(({ id, entry }): UserConfig => {
+    const requires = new Set<string>()
     return {
       entry,
       platform: "browser",
@@ -132,7 +152,50 @@ export default defineConfig(
         entryFileNames: `${id}.user.js`,
         legalComments: "inline",
       },
-      plugins: [saveNodeModulesRegion(), userscriptsBannerExtractorPlugin()],
+      plugins: [
+        externalGlobals(Object.fromEntries(importsTables)),
+        // due to how tsdown works, we need to capture requires in a separate plugin before the banner extractor runs
+        {
+          name: "capture-node-modules-requires",
+          transform(code) {
+            const regex = /__USERSCRIPT_IMPORT:([a-zA-Z0-9_-]+)/
+
+            const match = code.match(regex)
+            const result = match?.[1]
+            if (result) {
+              requires.add(result)
+            }
+
+            return code
+          },
+        },
+        saveNodeModulesRegion(),
+        userscriptsBannerExtractorPlugin(),
+        {
+          name: "add-node-modules-userscript-requires",
+          generateBundle(_options: any, bundle: any) {
+            const first = Object.values(bundle)[0] as any
+            if (!first || first.type !== "chunk") return
+
+            let code: string = first.code
+
+            const headerEnd = code.indexOf("// ==/UserScript==")
+            let header = code.slice(0, headerEnd)
+            const pad = /\/\/ @([a-zA-Z]+ +)/.exec(header)![1]!.length
+
+            header += Array.from(requires).map((req) => {
+              const importEntry = externalGlobalsTable[req]
+              if (!importEntry) {
+                throw new Error(`Cannot find externalGlobalsTable entry for ${req}`)
+              }
+
+              return `// ${"@require".padEnd(pad)} ${importEntry.url}`
+            })
+            code = header.trimEnd() + "\n" + code.slice(headerEnd)
+            first.code = code
+          },
+        },
+      ],
     }
   })
 )
