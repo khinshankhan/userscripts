@@ -206,7 +206,12 @@ export default defineConfig(
             let header = code.slice(0, headerEnd)
             const pad = /\/\/ @([a-zA-Z]+ +)/.exec(header)![1]!.length
 
-            header += Array.from(requires)
+            const requiresList = Array.from(requires)
+            if (requiresList.length === 0) {
+              return
+            }
+
+            header += requiresList
               .map((req) => {
                 const importEntry = externalGlobalsTable[req]
                 if (!importEntry) {
@@ -242,7 +247,12 @@ export default defineConfig(
             const beforeIffeStart = code.slice(0, iffeFirstLineEnd)
             const afterIffeStart = code.slice(iffeFirstLineEnd)
 
-            const dynamicRequires = Array.from(requires)
+            const requiresList = Array.from(requires)
+            if (requiresList.length === 0) {
+              return
+            }
+
+            const dynamicRequires = requiresList
               .map((req) => {
                 const importEntry = externalGlobalsTable[req]
                 if (!importEntry) {
@@ -258,7 +268,9 @@ export default defineConfig(
               .filter((line) => line !== null)
               .join("\n")
 
-            code = beforeIffeStart + dynamicRequires + "\n" + afterIffeStart
+            const dynamicRequiresLines = dynamicRequires.length > 0 ? dynamicRequires + "\n" : ""
+
+            code = beforeIffeStart + dynamicRequiresLines + afterIffeStart
             code = code.replace("(function() {", "(async function() {")
             first.code = code
           },
