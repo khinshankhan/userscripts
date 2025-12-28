@@ -151,6 +151,7 @@ export default defineConfig(
       outputOptions: {
         entryFileNames: `${id}.user.js`,
         legalComments: "inline",
+        intro: '"use strict"',
       },
       plugins: [
         externalGlobals(Object.fromEntries(importsTables)),
