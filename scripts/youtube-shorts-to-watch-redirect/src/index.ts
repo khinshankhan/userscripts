@@ -10,7 +10,7 @@ defineUserScript({
   homepageURL: "https://github.com/khinshankhan/userscripts",
   supportURL: "https://github.com/khinshankhan/userscripts/issues",
 
-  match: ["https://www.youtube.com/shorts/*", "https://youtube.com/shorts/*"],
+  match: ["https://*.youtube.com/shorts/*", "https://youtube.com/shorts/*"],
 
   runAt: "document-start",
   grant: ["none"],

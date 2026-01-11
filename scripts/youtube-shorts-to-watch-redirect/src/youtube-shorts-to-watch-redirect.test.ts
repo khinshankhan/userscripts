@@ -22,6 +22,12 @@ describe("toWatchUrlFromShortsUrl", () => {
     )
   })
 
+  it("converts mobile /shorts/{vid} to /watch?v={vid}", () => {
+    expect(toWatchUrlFromShortsUrl(loc("https://m.youtube.com/shorts/dQw4w9WgXcQ"))).toBe(
+      "https://m.youtube.com/watch?v=dQw4w9WgXcQ"
+    )
+  })
+
   it("preserves existing query params and overwrites v", () => {
     expect(
       toWatchUrlFromShortsUrl(
