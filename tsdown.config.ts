@@ -27,6 +27,13 @@ function bannerObjectToString(opts: UserscriptBanner): string {
     if (Array.isArray(v)) {
       for (const item of v) entries.push([key, String(item)])
     } else {
+      if (typeof v === "boolean") {
+        if (v) {
+          entries.push([key, ""])
+        }
+        continue
+      }
+
       entries.push([key, String(v)])
     }
   }

@@ -34,18 +34,21 @@ fs.writeFileSync(
   `${dir}/src/index.ts`,
   `defineUserScript({
   name: "${name}",
-  description: "TODO",
   namespace: "https://khinshankhan.com",
   version: "0.1.0",
-
+  description: "TODO",
   author: "khinshankhan",
-  homepageURL: "https://github.com/khinshankhan/userscripts",
-  supportURL: "https://github.com/khinshankhan/userscripts/issues",
+  license: "Apache-2.0",
 
   match: ["*://*/*"],
 
-  runAt: "document-end",
   grant: ["none"],
+
+  runAt: "document-start",
+  noframes: true,
+
+  homepageURL: "https://github.com/khinshankhan/userscripts",
+  supportURL: "https://github.com/khinshankhan/userscripts/issues",
 })
 
 console.log("%c${name}.", "font-family: monospace; color: #d6a6db;")`
