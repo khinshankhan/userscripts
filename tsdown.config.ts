@@ -152,11 +152,6 @@ const externalGlobalsTable: Record<
     format: "esm",
     url: "https://esm.sh/zod@4.2.1",
   },
-  "@violentmonkey/url": {
-    lib: "VM",
-    format: "umd",
-    url: "https://cdn.jsdelivr.net/npm/@violentmonkey/url",
-  },
 }
 
 const importsTables = Object.entries(externalGlobalsTable).map((kv) => {

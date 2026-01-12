@@ -1,4 +1,3 @@
-import { onNavigate } from "@violentmonkey/url"
 import { redirectTo, toWatchUrlFromShortsUrl } from "./youtube-shorts-to-watch-redirect"
 
 defineUserScript({
@@ -27,8 +26,23 @@ function handleNavigate() {
   }
 }
 
-// listen for URL changes
-onNavigate(handleNavigate)
-
 // handle initial load
 handleNavigate()
+
+// listen for SPA URL changes (throttled)
+let lastUrl = location.href
+let scheduled = false
+
+new MutationObserver(() => {
+  if (scheduled) return
+  scheduled = true
+
+  queueMicrotask(() => {
+    scheduled = false
+    const url = location.href
+    if (url !== lastUrl) {
+      lastUrl = url
+      handleNavigate()
+    }
+  })
+}).observe(document, { subtree: true, childList: true })

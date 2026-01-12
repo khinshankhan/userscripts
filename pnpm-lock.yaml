@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@violentmonkey/url':
-        specifier: ^0.1.0
-        version: 0.1.0
       zod:
         specifier: ^4.2.1
         version: 4.2.1
@@ -76,10 +73,6 @@ packages:
     resolution: {integrity: sha512-KKBU1VGYR7ORr3At5HAtUQ+TV3SzRCXmA/8OdDZiLDBIZxVyzXuztPjfLd3BV1PRAQGCMWWSHYhL0F8d5uHBDQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
-
-  '@babel/runtime@7.28.4':
-    resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
-    engines: {node: '>=6.9.0'}
 
   '@babel/types@7.28.5':
     resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
@@ -589,9 +582,6 @@ packages:
 
   '@types/tampermonkey@5.0.5':
     resolution: {integrity: sha512-ZWitwJH4T/jcQiynhc3I5DNiwlsDzVTKPXg6A8ltTw3SDuf0b00bNRSV0Z/yldnhhBi9e8g8vY/X3LVSQcaCKQ==}
-
-  '@violentmonkey/url@0.1.0':
-    resolution: {integrity: sha512-IIMfFJkbIeZC9dHWBZQeM6HV7/jilKK0DiWUCHBQbrCPY+UxbSXmnNjkuBljWq7g9+Dr/hRwIulScOBWUSYfIw==}
 
   '@vitest/expect@4.0.16':
     resolution: {integrity: sha512-eshqULT2It7McaJkQGLkPjPjNph+uevROGuIMJdG3V+0BSR2w9u6J9Lwu+E8cK5TETlfou8GRijhafIMhXsimA==}
@@ -1387,8 +1377,6 @@ snapshots:
     dependencies:
       '@babel/types': 7.28.5
 
-  '@babel/runtime@7.28.4': {}
-
   '@babel/types@7.28.5':
     dependencies:
       '@babel/helper-string-parser': 7.27.1
@@ -1736,10 +1724,6 @@ snapshots:
       undici-types: 7.16.0
 
   '@types/tampermonkey@5.0.5': {}
-
-  '@violentmonkey/url@0.1.0':
-    dependencies:
-      '@babel/runtime': 7.28.4
 
   '@vitest/expect@4.0.16':
     dependencies:

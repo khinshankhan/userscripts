@@ -26,7 +26,6 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
-    "@violentmonkey/url": "^0.1.0",
     "zod": "^4.2.1"
   }
 }
