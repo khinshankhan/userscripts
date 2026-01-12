@@ -1,3 +1,4 @@
+import { onNavigate } from "@violentmonkey/url"
 import { redirectTo, toWatchUrlFromShortsUrl } from "./youtube-shorts-to-watch-redirect"
 
 defineUserScript({
@@ -8,7 +9,7 @@ defineUserScript({
   author: "khinshankhan",
   license: "Apache-2.0",
 
-  match: ["https://*.youtube.com/shorts/*", "https://youtube.com/shorts/*"],
+  match: ["https://*.youtube.com/*", "https://youtube.com/*"],
 
   grant: ["none"],
 
@@ -19,7 +20,15 @@ defineUserScript({
   supportURL: "https://github.com/khinshankhan/userscripts/issues",
 })
 
-const target = toWatchUrlFromShortsUrl(window.location)
-if (target) {
-  redirectTo(target)
+function handleNavigate() {
+  const target = toWatchUrlFromShortsUrl(window.location)
+  if (target) {
+    redirectTo(target)
+  }
 }
+
+// listen for URL changes
+onNavigate(handleNavigate)
+
+// handle initial load
+handleNavigate()

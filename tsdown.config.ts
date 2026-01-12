@@ -152,6 +152,11 @@ const externalGlobalsTable: Record<
     format: "esm",
     url: "https://esm.sh/zod@4.2.1",
   },
+  "@violentmonkey/url": {
+    lib: "VM",
+    format: "umd",
+    url: "https://cdn.jsdelivr.net/npm/@violentmonkey/url",
+  },
 }
 
 const importsTables = Object.entries(externalGlobalsTable).map((kv) => {
@@ -183,7 +188,7 @@ export default defineConfig(
         {
           name: "capture-node-modules-requires",
           transform(code) {
-            const regex = /__USERSCRIPT_IMPORT:([a-zA-Z0-9_-]+)/
+            const regex = new RegExp("__USERSCRIPT_IMPORT:([@a-zA-Z0-9_/-]+)")
 
             const match = code.match(regex)
             const result = match?.[1]
