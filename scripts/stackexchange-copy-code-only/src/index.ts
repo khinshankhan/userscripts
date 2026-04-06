@@ -3,7 +3,7 @@ import { installStackExchangeCopyCodeOnly } from "./stackexchange-copy-code-only
 defineUserScript({
   name: "Stack Exchange Copy Code Only",
   namespace: "https://khinshankhan.com",
-  version: "0.1.0",
+  version: "0.1.1",
   description:
     "Adds a copy button that copies only the code, without Stack Exchange attribution text.",
   author: "khinshankhan",

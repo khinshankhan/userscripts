@@ -1,16 +1,15 @@
 // based on https://stackoverflow.com/a/65996386
-export async function copyToClipboardGraceful(text: string): Promise<boolean> {
-  // Navigator clipboard API needs a secure context.
-  if (navigator.clipboard && window.isSecureContext) {
-    try {
-      await navigator.clipboard.writeText(text)
-      return true
-    } catch (error) {
-      console.error(error)
-      return false
-    }
+async function copyToClipboardModern(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch (error) {
+    console.error(error)
+    return false
   }
+}
 
+function copyToClipboardLegacy(text: string): boolean {
   const textArea = document.createElement("textarea")
   textArea.value = text
   textArea.setAttribute("readonly", "")
@@ -31,4 +30,13 @@ export async function copyToClipboardGraceful(text: string): Promise<boolean> {
   } finally {
     textArea.remove()
   }
+}
+
+export async function copyToClipboardGraceful(text: string): Promise<boolean> {
+  // Navigator clipboard API needs a secure context.
+  if (navigator.clipboard && window.isSecureContext) {
+    return copyToClipboardModern(text)
+  }
+
+  return copyToClipboardLegacy(text)
 }

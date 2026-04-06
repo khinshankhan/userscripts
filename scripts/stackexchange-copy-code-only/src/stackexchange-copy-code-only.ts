@@ -89,11 +89,10 @@ export function installStackExchangeCopyCodeOnly(doc: Document = document): () =
   enhanceCodeBlocks(doc)
 
   const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const node of mutation.addedNodes) {
-        if (!(node instanceof HTMLElement)) continue
-        enhanceCodeBlocks(node)
-      }
+    const addedNodes = mutations.flatMap((mutation) => Array.from(mutation.addedNodes))
+    for (const node of addedNodes) {
+      if (!(node instanceof HTMLElement)) continue
+      enhanceCodeBlocks(node)
     }
   })
 
