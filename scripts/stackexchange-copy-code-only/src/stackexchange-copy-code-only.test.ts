@@ -67,7 +67,9 @@ describe("stackexchange-copy-code-only", () => {
 
     installStackExchangeCopyCodeOnly(document)
 
-    const button = document.querySelector<HTMLButtonElement>('button[data-shan-copy-code-only="true"]')
+    const button = document.querySelector<HTMLButtonElement>(
+      'button[data-shan-copy-code-only="true"]'
+    )
     if (!button) {
       throw new Error("Copy-only button not found")
     }

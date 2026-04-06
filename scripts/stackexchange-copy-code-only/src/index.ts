@@ -4,7 +4,8 @@ defineUserScript({
   name: "Stack Exchange Copy Code Only",
   namespace: "https://khinshankhan.com",
   version: "0.1.0",
-  description: "Adds a copy button that copies only the code, without Stack Exchange attribution text.",
+  description:
+    "Adds a copy button that copies only the code, without Stack Exchange attribution text.",
   author: "khinshankhan",
   license: "Apache-2.0",
 
