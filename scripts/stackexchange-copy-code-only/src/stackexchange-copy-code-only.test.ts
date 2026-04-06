@@ -29,7 +29,7 @@ describe("stackexchange-copy-code-only", () => {
     expect(getCodeText(code)).toBe("nuitka --standalone your_script.py")
   })
 
-  it("adds a button next to the existing Stack Exchange copy button", () => {
+  it("removes nearby native copy buttons and adds an overlay button on the code block", () => {
     document.body.innerHTML = `
       <div>
         <button class="js-copy-button" type="button">Copy</button>
@@ -40,7 +40,11 @@ describe("stackexchange-copy-code-only", () => {
     enhanceCodeBlocks(document)
 
     const buttons = Array.from(document.querySelectorAll("button"))
-    expect(buttons.map((button) => button.textContent)).toEqual(["Copy", "Copy code only"])
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0]?.textContent).toBe("Copy code only")
+    expect(buttons[0]?.matches("[data-shan-copy-code-only='true']")).toBe(true)
+    expect(buttons[0]?.parentElement?.tagName).toBe("PRE")
+    expect(buttons[0]?.className).toContain("shan-copy-code-only-overlay")
   })
 
   it("falls back to an overlay button when no native copy button exists", () => {

@@ -56,20 +56,22 @@ function attachButton(pre: HTMLPreElement, code: HTMLElement): void {
     return
   }
 
-  const doc = pre.ownerDocument
-  const existingButton = pre.parentElement?.querySelector<HTMLButtonElement>(
+  const existingButtons = pre.parentElement?.querySelectorAll<HTMLButtonElement>(
     ".js-copy-button, .copy-code-button"
   )
-  const button = createCopyOnlyButton(doc, code)
+  existingButtons?.forEach((existingButton) => {
+    const wrapper = existingButton.closest("div")
+    if (wrapper && pre.contains(wrapper)) {
+      wrapper.remove()
+      return
+    }
+    existingButton.remove()
+  })
 
-  if (existingButton?.parentElement) {
-    existingButton.insertAdjacentElement("afterend", button)
-    return
-  }
-
+  const button = createCopyOnlyButton(pre.ownerDocument, code)
   pre.style.position = "relative"
   button.classList.add(OVERLAY_BUTTON_CLASS)
-  pre.append(button)
+  pre.prepend(button)
 }
 
 export function enhanceCodeBlocks(root: ParentNode): void {
