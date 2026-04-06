@@ -50,6 +50,7 @@ describe("stackexchange-copy-code-only", () => {
     expect(buttons[0]?.parentElement?.tagName).toBe("PRE")
     expect(buttons[0]?.className).toContain("shan-copy-code-only-overlay")
     expect(document.querySelector(".js-copy-button")).toBeNull()
+    expect(document.querySelector("pre > div")).toBeNull()
   })
 
   it("falls back to an overlay button when no native copy button exists", () => {
@@ -95,5 +96,63 @@ describe("stackexchange-copy-code-only", () => {
     await Promise.resolve()
 
     expect(writeText).toHaveBeenCalledWith("nuitka --standalone your_script.py")
+  })
+
+  it("handles Stack Overflow's nested s-code-block toolbar markup", () => {
+    document.body.innerHTML = `
+      <pre class="s-code-block">
+        <div>
+          <div class="mtn4 d-flex jc-end ps-sticky l0 mrn4">
+            <button
+              type="button"
+              class="py2 mb2 s-btn s-btn__muted s-btn__xs fs-caption ff-sans d-flex ai-center js-copy-button fc-black-400 h:fc-black-500 f:bg-black-200 v3 svelte-1tzwzlq"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+        <code class="hljs language-crmsh">
+          $ git log --oneline origin/next..origin/<span class="hljs-keyword">master</span>
+          <span class="hljs-title">59b5552</span> <span class="hljs-keyword">master</span>
+        </code>
+      </pre>
+    `
+
+    enhanceCodeBlocks(document)
+
+    const pre = document.querySelector("pre.s-code-block")
+    const customButton = document.querySelector<HTMLButtonElement>(
+      'button[data-shan-copy-code-only="true"]'
+    )
+
+    expect(pre?.querySelector(".js-copy-button")).toBeNull()
+    expect(pre?.firstElementChild).toBe(customButton)
+    expect(customButton?.className).toContain("shan-copy-code-only-overlay")
+  })
+
+  it("removes a native toolbar injected after the custom button is mounted", async () => {
+    document.body.innerHTML = `
+      <pre class="s-code-block"><code>print("hi")</code></pre>
+    `
+
+    cleanup = installStackExchangeCopyCodeOnly(document)
+
+    const pre = document.querySelector("pre.s-code-block")
+    if (!(pre instanceof HTMLPreElement)) {
+      throw new Error("Pre element not found")
+    }
+
+    const lateToolbar = document.createElement("div")
+    lateToolbar.innerHTML = `
+      <div class="mtn4 d-flex jc-end ps-sticky l0 mrn4">
+        <button type="button" class="js-copy-button">Copy</button>
+      </div>
+    `
+    pre.prepend(lateToolbar)
+
+    await vi.waitFor(() => {
+      expect(pre.querySelector(".js-copy-button")).toBeNull()
+      expect(pre.querySelectorAll('button[data-shan-copy-code-only="true"]')).toHaveLength(1)
+    })
   })
 })

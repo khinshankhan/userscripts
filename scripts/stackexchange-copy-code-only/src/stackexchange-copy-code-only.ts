@@ -19,19 +19,12 @@ function setTemporaryButtonText(button: HTMLButtonElement, text: string): void {
   }, 1500)
 }
 
-function createCopyOnlyButton(doc: Document, code: Element): HTMLButtonElement {
+function createCopyOnlyButton(doc: Document): HTMLButtonElement {
   const button = doc.createElement("button")
   button.type = "button"
   button.className = "s-btn s-btn__filled s-btn__xs ws-nowrap"
   button.setAttribute(COPY_ONLY_BUTTON_ATTR, "true")
   button.textContent = "Copy code only"
-  button.addEventListener("click", async (event) => {
-    event.preventDefault()
-    event.stopPropagation()
-
-    const ok = await copyToClipboardGraceful(getCodeText(code))
-    setTemporaryButtonText(button, ok ? "Copied" : "Copy failed")
-  })
   return button
 }
 
@@ -51,24 +44,30 @@ function ensureStyles(doc: Document): void {
   doc.head.append(style)
 }
 
-function attachButton(pre: HTMLPreElement, code: HTMLElement): void {
+function removeNativeCopyButtons(pre: HTMLPreElement): void {
+  const existingButtons = pre.querySelectorAll<HTMLButtonElement>(".js-copy-button, .copy-code-button")
+  for (const existingButton of existingButtons) {
+    let wrapper: HTMLElement | null = existingButton
+    while (wrapper?.parentElement && wrapper.parentElement !== pre) {
+      wrapper = wrapper.parentElement
+    }
+
+    if (wrapper && wrapper.parentElement === pre) {
+      wrapper.remove()
+      continue
+    }
+
+    existingButton.remove()
+  }
+}
+
+function attachButton(pre: HTMLPreElement): void {
+  removeNativeCopyButtons(pre)
   if (pre.querySelector(`[${COPY_ONLY_BUTTON_ATTR}]`)) {
     return
   }
 
-  const existingButtons = pre.parentElement?.querySelectorAll<HTMLButtonElement>(
-    ".js-copy-button, .copy-code-button"
-  )
-  existingButtons?.forEach((existingButton) => {
-    const wrapper = existingButton.closest("div")
-    if (wrapper && pre.contains(wrapper)) {
-      wrapper.remove()
-      return
-    }
-    existingButton.remove()
-  })
-
-  const button = createCopyOnlyButton(pre.ownerDocument, code)
+  const button = createCopyOnlyButton(pre.ownerDocument)
   pre.style.position = "relative"
   button.classList.add(OVERLAY_BUTTON_CLASS)
   pre.prepend(button)
@@ -83,26 +82,62 @@ export function enhanceCodeBlocks(root: ParentNode): void {
   for (const code of root.querySelectorAll<HTMLElement>("pre > code")) {
     const pre = code.parentElement
     if (!(pre instanceof HTMLPreElement)) continue
-    attachButton(pre, code)
+    attachButton(pre)
   }
+}
+
+function enhanceClosestCodeBlock(node: HTMLElement): void {
+  const pre = node.closest("pre")
+  if (!(pre instanceof HTMLPreElement)) return
+
+  const code = pre.querySelector<HTMLElement>("code")
+  if (!code) return
+
+  attachButton(pre)
+}
+
+async function handleCopyButtonClick(button: HTMLButtonElement): Promise<void> {
+  const pre = button.closest("pre")
+  if (!(pre instanceof HTMLPreElement)) return
+
+  const code = pre.querySelector("code")
+  if (!(code instanceof HTMLElement)) return
+
+  const ok = await copyToClipboardGraceful(getCodeText(code))
+  setTemporaryButtonText(button, ok ? "Copied" : "Copy failed")
 }
 
 export function installStackExchangeCopyCodeOnly(doc: Document = document): () => void {
   enhanceCodeBlocks(doc)
+
+  const onClick = (event: Event) => {
+    const target = event.target
+    if (!(target instanceof Element)) return
+
+    const button = target.closest<HTMLButtonElement>(`button[${COPY_ONLY_BUTTON_ATTR}="true"]`)
+    if (!button) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    void handleCopyButtonClick(button)
+  }
 
   const observer = new MutationObserver((mutations) => {
     const addedNodes = mutations.flatMap((mutation) => Array.from(mutation.addedNodes))
     for (const node of addedNodes) {
       if (!(node instanceof HTMLElement)) continue
       enhanceCodeBlocks(node)
+      enhanceClosestCodeBlock(node)
     }
   })
 
   observer.observe(doc.body, { childList: true, subtree: true })
+  doc.addEventListener("click", onClick, true)
   const unsubscribeNavigate = onNavigate(() => enhanceCodeBlocks(doc), { immediate: false })
 
   return () => {
     observer.disconnect()
+    doc.removeEventListener("click", onClick, true)
     unsubscribeNavigate()
   }
 }
