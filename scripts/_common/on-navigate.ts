@@ -15,13 +15,20 @@ export type OnNavigateOptions = {
 }
 
 export function onNavigate(handler: NavigateHandler, opts: OnNavigateOptions = {}): () => void {
+  const rootWindow = window
+  const rootDocument = document
+  const rootHistory = history
+
   const immediate = opts.immediate ?? true
   const useMO = opts.useMutationObserverFallback ?? true
 
-  let lastUrl = window.location.href
+  let active = true
+  let lastUrl = rootWindow.location.href
 
   const emitIfChanged = () => {
-    const url = window.location.href
+    if (!active) return
+
+    const url = rootWindow.location.href
     if (url === lastUrl) return
     const prev = lastUrl
     lastUrl = url
@@ -33,23 +40,23 @@ export function onNavigate(handler: NavigateHandler, opts: OnNavigateOptions = {
   if (immediate) handler(lastUrl, null)
 
   // navigation API
-  const nav = (self as any).navigation
+  const nav = (rootWindow as any).navigation
   const onNavSuccess = () => scheduleEmit()
   if (nav?.addEventListener) {
     nav.addEventListener("navigatesuccess", onNavSuccess)
   }
 
   // history API hooks
-  const originalPushState = history.pushState
-  const originalReplaceState = history.replaceState
+  const originalPushState = rootHistory.pushState
+  const originalReplaceState = rootHistory.replaceState
 
-  history.pushState = function (this: History, ...args: any[]) {
+  rootHistory.pushState = function (this: History, ...args: any[]) {
     const ret = originalPushState.apply(this, args as any)
     scheduleEmit()
     return ret
   } as History["pushState"]
 
-  history.replaceState = function (this: History, ...args: any[]) {
+  rootHistory.replaceState = function (this: History, ...args: any[]) {
     const ret = originalReplaceState.apply(this, args as any)
     scheduleEmit()
     return ret
@@ -58,8 +65,8 @@ export function onNavigate(handler: NavigateHandler, opts: OnNavigateOptions = {
   // browser navigation / hash
   const onPop = () => scheduleEmit()
   const onHash = () => scheduleEmit()
-  window.addEventListener("popstate", onPop, true)
-  window.addEventListener("hashchange", onHash, true)
+  rootWindow.addEventListener("popstate", onPop, true)
+  rootWindow.addEventListener("hashchange", onHash, true)
 
   // throttled MutationObserver fallback
   let mo: MutationObserver | null = null
@@ -73,18 +80,20 @@ export function onNavigate(handler: NavigateHandler, opts: OnNavigateOptions = {
         emitIfChanged()
       })
     })
-    mo.observe(document, { subtree: true, childList: true })
+    mo.observe(rootDocument, { subtree: true, childList: true })
   }
 
   // cleanup / unsubscribe
   return () => {
+    active = false
+
     if (nav?.removeEventListener) {
       nav.removeEventListener("navigatesuccess", onNavSuccess)
     }
-    history.pushState = originalPushState
-    history.replaceState = originalReplaceState
-    window.removeEventListener("popstate", onPop, true)
-    window.removeEventListener("hashchange", onHash, true)
+    rootHistory.pushState = originalPushState
+    rootHistory.replaceState = originalReplaceState
+    rootWindow.removeEventListener("popstate", onPop, true)
+    rootWindow.removeEventListener("hashchange", onHash, true)
     mo?.disconnect()
   }
 }

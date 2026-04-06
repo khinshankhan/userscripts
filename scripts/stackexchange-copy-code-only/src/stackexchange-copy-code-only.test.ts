@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   enhanceCodeBlocks,
   getCodeText,
@@ -6,9 +6,17 @@ import {
 } from "./stackexchange-copy-code-only"
 
 describe("stackexchange-copy-code-only", () => {
+  let cleanup: (() => void) | null = null
+
   beforeEach(() => {
     document.head.innerHTML = ""
     document.body.innerHTML = ""
+    cleanup = null
+  })
+
+  afterEach(() => {
+    cleanup?.()
+    cleanup = null
   })
 
   it("reads only the code text", () => {
@@ -65,7 +73,7 @@ describe("stackexchange-copy-code-only", () => {
       </div>
     `
 
-    installStackExchangeCopyCodeOnly(document)
+    cleanup = installStackExchangeCopyCodeOnly(document)
 
     const button = document.querySelector<HTMLButtonElement>(
       'button[data-shan-copy-code-only="true"]'
