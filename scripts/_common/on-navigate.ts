@@ -18,10 +18,10 @@ export function onNavigate(handler: NavigateHandler, opts: OnNavigateOptions = {
   const immediate = opts.immediate ?? true
   const useMO = opts.useMutationObserverFallback ?? true
 
-  let lastUrl = location.href
+  let lastUrl = window.location.href
 
   const emitIfChanged = () => {
-    const url = location.href
+    const url = window.location.href
     if (url === lastUrl) return
     const prev = lastUrl
     lastUrl = url
