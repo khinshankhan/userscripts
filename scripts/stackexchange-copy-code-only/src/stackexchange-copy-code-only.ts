@@ -45,7 +45,9 @@ function ensureStyles(doc: Document): void {
 }
 
 function removeNativeCopyButtons(pre: HTMLPreElement): void {
-  const existingButtons = pre.querySelectorAll<HTMLButtonElement>(".js-copy-button, .copy-code-button")
+  const existingButtons = pre.querySelectorAll<HTMLButtonElement>(
+    ".js-copy-button, .copy-code-button"
+  )
   for (const existingButton of existingButtons) {
     let wrapper: HTMLElement | null = existingButton
     while (wrapper?.parentElement && wrapper.parentElement !== pre) {
