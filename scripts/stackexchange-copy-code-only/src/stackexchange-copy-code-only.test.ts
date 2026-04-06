@@ -31,10 +31,14 @@ describe("stackexchange-copy-code-only", () => {
 
   it("removes nearby native copy buttons and adds an overlay button on the code block", () => {
     document.body.innerHTML = `
-      <div>
-        <button class="js-copy-button" type="button">Copy</button>
-        <pre><code>print("hi")</code></pre>
-      </div>
+      <pre class="s-code-block">
+        <div>
+          <div>
+            <button class="js-copy-button" type="button">Copy</button>
+          </div>
+        </div>
+        <code>print("hi")</code>
+      </pre>
     `
 
     enhanceCodeBlocks(document)
@@ -45,6 +49,7 @@ describe("stackexchange-copy-code-only", () => {
     expect(buttons[0]?.matches("[data-shan-copy-code-only='true']")).toBe(true)
     expect(buttons[0]?.parentElement?.tagName).toBe("PRE")
     expect(buttons[0]?.className).toContain("shan-copy-code-only-overlay")
+    expect(document.querySelector(".js-copy-button")).toBeNull()
   })
 
   it("falls back to an overlay button when no native copy button exists", () => {
