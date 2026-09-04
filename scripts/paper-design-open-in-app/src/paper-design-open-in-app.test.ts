@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest"
-import { toPaperAppUrl } from "./paper-design-open-in-app"
+import { describe, it, expect, vi, afterEach } from "vitest"
+import { openInApp, toPaperAppUrl } from "./paper-design-open-in-app"
 
 function loc(href: string): Location {
   const u = new URL(href)
@@ -55,5 +55,38 @@ describe("toPaperAppUrl", () => {
   it("returns null for other hosts", () => {
     expect(toPaperAppUrl(loc("https://paper.design/file/abc/1-0"))).toBeNull()
     expect(toPaperAppUrl(loc("https://evil.example.com/file/abc/1-0"))).toBeNull()
+  })
+})
+
+describe("openInApp", () => {
+  afterEach(() => {
+    vi.useRealTimers()
+    document.body.innerHTML = ""
+  })
+
+  it("hands off via a hidden iframe without touching location", () => {
+    vi.useFakeTimers()
+    const before = window.location.href
+
+    openInApp("paper://file/abc/1-0")
+
+    const frame = document.querySelector("iframe")
+    if (!(frame instanceof HTMLIFrameElement)) {
+      throw new Error("expected a hidden iframe to be appended")
+    }
+
+    expect(frame.src).toBe("paper://file/abc/1-0")
+    expect(frame.style.display).toBe("none")
+    expect(window.location.href).toBe(before)
+  })
+
+  it("cleans up the iframe after the handoff", () => {
+    vi.useFakeTimers()
+
+    openInApp("paper://file/abc/1-0")
+    expect(document.querySelector("iframe")).not.toBeNull()
+
+    vi.runAllTimers()
+    expect(document.querySelector("iframe")).toBeNull()
   })
 })

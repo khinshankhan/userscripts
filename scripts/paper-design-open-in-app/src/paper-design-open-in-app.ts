@@ -1,7 +1,24 @@
 export const PAPER_APP_HOST = "app.paper.design"
 
-export function redirectTo(url: string): void {
-  window.location.replace(url)
+/**
+ * Fire a `paper://` deep link without disturbing the current page.
+ *
+ * The web app is deliberately left loaded underneath: the browser shows an
+ * "Open Paper?" prompt and there is no event for either outcome, so if the
+ * user cancels (or has no app installed) they simply stay on a working page.
+ * A hidden iframe does the handoff without touching history the way
+ * `location.replace` would.
+ */
+export function openInApp(url: string): void {
+  const frame = document.createElement("iframe")
+  frame.style.display = "none"
+  frame.src = url
+
+  document.body.appendChild(frame)
+
+  // the navigation is handed to the OS synchronously, so the frame has done
+  // its job by the next tick.
+  setTimeout(() => frame.remove(), 0)
 }
 
 /**
